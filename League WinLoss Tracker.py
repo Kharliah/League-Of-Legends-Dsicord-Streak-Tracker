@@ -5,15 +5,14 @@ import os
 import discord
 import time 
 import asyncio
-bearer_token = '<Riot Token'
-
+bearer_token = '<token>
 headers = {
     'X-Riot-Token':  bearer_token,
     'Content-Type': 'application/json'  # Adjust content type as needed
 }
 
 def getUser(username):
-    url = 'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/'+username+ '/<Your Region or Tag here>' #like OCE or US etc
+    url = 'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/'+username+'/OCE'
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         data = response.json()
@@ -21,11 +20,12 @@ def getUser(username):
     else:
         print("Error:", response.status_code)
 
-Users = ["Joe", "Bob", "Feltman", "Kenny"]
+Users = ["John", "Joe", "Jimothy", "James"]
 players = {
-    'Joe': '<puuid>',
-    'Bob': '<puuid> ',
-    'Kenny': '<puuid>',
+    'John': 'b',
+    'Joe': 'n',
+    'Jimothy': 'M',
+    'James': '4'
 
 }
 #if getting IDs for the first time or everytime
@@ -33,18 +33,19 @@ players = {
 #for user in Users:
 #    players[user]= getUser(user)
 streaks = {
-                "Joe": -1
-               , "Bob": 3
-               , "Kenny": 1
+                "John": 0
+               , "Joe": 0
+               , "Jimothy": 0
+               , "James": 0
                }
 while(True): 
-    Users = ["Joe", "Bob", "Feltman", "Kenny"]
+    Users = ["John", "Joe", "Jimothy", "James"] #this is needed later because I cant be bothered explaining why
     def getMatches(puuid):
-        url = "https://sea.api.riotgames.com/lol/match/v5/matches/by-puuid/"+puuid+"/ids?start=0&count=2"
+        url = "https://sea.api.riotgames.com/lol/match/v5/matches/by-puuid/"+puuid+"/ids?start=0&count=2&type=ranked" #only get ranked games
         try:
             response = requests.get(url, headers=headers)
         except Exception as e:
-            print("shit fucked up RIP - the recent matches")
+            print("RIP - the recent matches")
             return ""
         if response.status_code == 200:
             data = response.json()
@@ -53,7 +54,7 @@ while(True):
             else:
                 return ""
         else:
-            print("Error:", response.status_code)
+            return ""
 
     recentMatchId = {}
     for player,puuid in players.items():
@@ -65,14 +66,14 @@ while(True):
     #OC1_607839571
 
     def getMatchResult(matchID, Player):
-        url = "https://sea.api.riotgames.com/lol/match/v5/matches/" + matchID #replace sea with whatever you are - check riot docos
+        url = "https://sea.api.riotgames.com/lol/match/v5/matches/" + matchID
         try:
             response = requests.get(url, headers=headers)
-            print(Player)
+            #print(Player)
 
         except Exception as e:
-            print("shit fucked up RIP - match results")
-            return "JESUS FUCK"
+            print("RIP - match results")
+            return ""
         
         if response.status_code == 200:
             # Process the response data
@@ -91,15 +92,15 @@ while(True):
             elif allInfo["queueId"] == 1900:
                 gameType = "Ultra Rapid Fire"
             else:
-                gameType = "Go find it yourself. The ID is " + str(allInfo["queueId"]) + " https://static.developer.riotgames.com/docs/lol/queues.json"
+                gameType = "Not found - The ID is " + str(allInfo["queueId"]) + " https://static.developer.riotgames.com/docs/lol/queues.json"
             #print("Did we make it here?")
-            fuck = int(allInfo["gameEndTimestamp"])
-            milliseconds_timestamp = fuck
+            swearWord = int(allInfo["gameEndTimestamp"])
+            milliseconds_timestamp = swearWord
             seconds_timestamp = milliseconds_timestamp / 1000
-            NormTime = datetime.datetime.fromtimestamp(seconds_timestamp)
+            shiza = datetime.datetime.fromtimestamp(seconds_timestamp)
             
             
-            local_datetime = datetime.datetime.strptime(str(NormTime), "%Y-%m-%d %H:%M:%S.%f")
+            local_datetime = datetime.datetime.strptime(str(shiza), "%Y-%m-%d %H:%M:%S.%f")
             formatted_datetime = local_datetime.strftime("%d/%m/%Y %H:%M")
             participants = allInfo["participants"]
 
@@ -125,9 +126,8 @@ while(True):
     for player,matchID in recentMatchId.items():
         #print(player + " " + matchID[0])
         if matchID:
-            isThereResult = getMatchResult(matchID[0], player)
-            #print(str(cunt))
-            if isThereResult:
+            brochacho = getMatchResult(matchID[0], player)
+            if brochacho:
                 matchResults.append(getMatchResult(matchID[0], player))
 
 
@@ -146,12 +146,11 @@ while(True):
             # Loop through each item in the list
             for item in range(len(matchResults)):
                 # Check if the first and second columns match
-                if row[0] == matchResults[item][0] and matchResults[item][8] != "Ultra Rapid Fire":
-                    if row[1] != matchResults[item][1]:
-                        print(matchResults[item][1] + " " +  row[1])
-                        changes.append(item)
-                    #else:
-                    #    print("No changes! " + matchResults[item][0] + " " + matchResults[item][1] )
+                if matchResults[item][0]:
+                    if row[0] == matchResults[item][0]:
+                        if row[1] != matchResults[item][1]:
+                            print(matchResults[item][1] + " " +  row[1])
+                            changes.append(item)
                         
 
     
@@ -181,27 +180,23 @@ while(True):
                 if matchResults[index][2] == "Won":
                     if streaks[i] <= 0:
                         streaks[i] = 1
-                        print(str(streaks[i]) + " one")
                     elif streaks[i] > 0:
                         streaks[i] = streaks[i] + 1
-                        print(str(streaks[i]) + " two")
                 if matchResults[index][2] == "Lost":
                     if streaks[i] >= 0:
                         streaks[i] = -1
-                        print(str(streaks[i]) + " three")
                     elif streaks[i] < 0:
                         streaks[i] = streaks[i] -1
-                        print(str(streaks[i]) + " four")
         print(streaks)
 
 
         async def main():
-            channel_id = "<Discord Channel ID>"
+            channel_id = CHANNEL_ID
             message = (matchResults[index][0] + " " +  matchResults[index][2] +
            " a " + matchResults[index][8] + " at " + matchResults[index][3] + ". KDA: " +
            str(matchResults[index][5]) + "/" + str(matchResults[index][6]) + "/" + str(matchResults[index][7]) +
            ". Champion: " + matchResults[index][4] + ". Streak: " + str(streaks[matchResults[index][0]]))
-            token = "<Discord Token>"
+            token = "<Token>"
             await send_message_to_channel(channel_id, message, token)
             
         asyncio.run(main())
@@ -209,10 +204,5 @@ while(True):
             with open('data.csv', 'w', newline='') as csvfile:
                     csvwriter = csv.writer(csvfile)
                     csvwriter.writerows(matchResults)
-    time.sleep(300) 
-            
-        
-
-
-    
-
+                    
+    time.sleep(300) #Run every 5 minutes
